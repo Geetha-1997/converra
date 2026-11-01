@@ -1,7 +1,7 @@
 #!/bin/bash
 # EC2 Launch Template "User data" for the app tier (Amazon Linux 2023).
 # EDIT the 3 values below, then paste the whole script into the Launch Template.
-REPO_URL="https://github.com/YOUR_USER/converra.git"
+REPO_URL="https://github.com/Geetha-1997/converra.git"
 REGION="ap-south-1"
 PARAM_PREFIX="/groqchat"
 
