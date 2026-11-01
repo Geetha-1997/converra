@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Converra</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #212121; color: #ececec; display: flex; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* Sidebar */
+    #sidebar { width: 260px; background: #171717; display: flex; flex-direction: column; padding: 10px; flex-shrink: 0; transition: margin-left .2s; }
+    #newChat { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: transparent; color: #ececec; border: 0; border-radius: 10px; font-size: 14px; text-align: left; }
+    #newChat:hover, .chat-item:hover, .chat-item.active { background: #2a2a2a; }
+    .side-label { font-size: 12px; color: #8e8e8e; padding: 14px 12px 6px; }
+    #chatList { flex: 1; overflow-y: auto; }
+    .chat-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 10px; font-size: 14px; cursor: pointer; gap: 8px; }
+    .chat-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chat-item .del { visibility: hidden; background: transparent; border: 0; color: #9a9a9a; font-size: 16px; padding: 0 4px; }
+    .chat-item:hover .del { visibility: visible; }
+    .chat-item .del:hover { color: #ff6b6b; }
+    .empty-list { color: #8e8e8e; font-size: 13px; padding: 8px 12px; }
+    #profile { display: flex; align-items: center; gap: 10px; padding: 12px; border-top: 1px solid #2a2a2a; font-size: 14px; }
+    .avatar { width: 30px; height: 30px; border-radius: 50%; background: #10a37f; display: grid; place-items: center; font-weight: 600; font-size: 13px; color: #fff; flex-shrink: 0; }
+
+    /* Main */
+    #main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+    #topbar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+    #menuBtn { display: none; background: transparent; border: 0; color: #ececec; font-size: 22px; }
+    #modelSelect { background: transparent; color: #ececec; border: 0; font-size: 17px; font-weight: 600; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+    #modelSelect:hover { background: #2a2a2a; }
+    #modelSelect option { background: #2f2f2f; color: #ececec; }
+    #scroll { flex: 1; overflow-y: auto; }
+    #chat { max-width: 760px; margin: 0 auto; padding: 10px 20px 30px; }
+
+    /* Welcome screen */
+    #welcome { max-width: 760px; margin: 0 auto; padding: 8vh 20px 0; text-align: center; }
+    #welcome h1 { font-size: 30px; font-weight: 600; margin: 0 0 8px; }
+    #welcome p { color: #9a9a9a; margin: 0 0 30px; }
+    .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .card { background: #2a2a2a; border: 1px solid #3a3a3a; color: #ececec; border-radius: 14px; padding: 14px 16px; text-align: left; font-size: 14px; line-height: 1.4; }
+    .card:hover { background: #333; }
+    .card b { display: block; margin-bottom: 4px; font-weight: 600; }
+    .card small { color: #9a9a9a; font-size: 13px; }
+
+    /* Messages */
+    .row { display: flex; gap: 14px; margin: 22px 0; }
+    .row.user { justify-content: flex-end; }
+    .row.user .bubble { background: #2f2f2f; padding: 10px 16px; border-radius: 20px; max-width: 80%; white-space: pre-wrap; word-wrap: break-word; }
+    .row.assistant .avatar { margin-top: 2px; }
+    .row.assistant .content { flex: 1; min-width: 0; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; }
+    .actions { margin-top: 6px; }
+    .actions button { background: transparent; border: 0; color: #9a9a9a; font-size: 13px; padding: 4px 8px; border-radius: 6px; }
+    .actions button:hover { background: #2a2a2a; color: #ececec; }
+    .error { color: #ff8a8a; }
+    pre { background: #0d0d0d; border-radius: 10px; margin: 12px 0; overflow: hidden; white-space: normal; }
+    .code-head { display: flex; justify-content: space-between; align-items: center; background: #2f2f2f; padding: 6px 14px; font-size: 12px; color: #b4b4b4; }
+    .code-head button { background: transparent; border: 0; color: #b4b4b4; font-size: 12px; }
+    .code-head button:hover { color: #fff; }
+    pre code { display: block; padding: 14px; overflow-x: auto; white-space: pre; font-family: ui-monospace, Consolas, monospace; font-size: 13px; line-height: 1.5; }
+    code.inline { background: #2f2f2f; padding: 2px 6px; border-radius: 6px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+    .dots span { display: inline-block; width: 7px; height: 7px; margin: 0 2px; background: #9a9a9a; border-radius: 50%; animation: blink 1.2s infinite; }
+    .dots span:nth-child(2) { animation-delay: .2s; } .dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: .2; } 40% { opacity: 1; } }
+
+    /* Composer */
+    #composerWrap { padding: 0 20px 14px; }
+    #composer { max-width: 760px; margin: 0 auto; background: #2f2f2f; border-radius: 26px; display: flex; align-items: flex-end; padding: 8px 8px 8px 20px; gap: 8px; }
+    #input { flex: 1; background: transparent; border: 0; outline: none; color: #ececec; font: inherit; font-size: 16px; resize: none; max-height: 200px; padding: 8px 0; line-height: 1.4; }
+    #send { width: 36px; height: 36px; border-radius: 50%; border: 0; background: #fff; color: #000; display: grid; place-items: center; flex-shrink: 0; }
+    #send:disabled { background: #4a4a4a; color: #888; cursor: default; }
+    #foot { text-align: center; font-size: 12px; color: #8e8e8e; margin-top: 10px; }
+
+    @media (max-width: 768px) {
+      #sidebar { position: fixed; z-index: 10; height: 100%; margin-left: -270px; }
+      #sidebar.open { margin-left: 0; }
+      #menuBtn { display: block; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <aside id="sidebar">
+    <button id="newChat">&#9998;&nbsp; New chat</button>
+    <div class="side-label">Recent chats</div>
+    <div id="chatList"></div>
+    <div id="profile"><div class="avatar">G</div><div>Guest<br><small style="color:#8e8e8e">Converra</small></div></div>
+  </aside>
+
+  <div id="main">
+    <div id="topbar">
+      <button id="menuBtn" aria-label="Menu">&#9776;</button>
+      <select id="modelSelect" aria-label="Model"></select>
+    </div>
+
+    <div id="scroll">
+      <div id="welcome">
+        <h1>What can I help with?</h1>
+        <p>Converra is powered by Groq for fast responses.</p>
+        <div class="cards" id="cards"></div>
+      </div>
+      <div id="chat"></div>
+    </div>
+
+    <div id="composerWrap">
+      <form id="composer">
+        <textarea id="input" rows="1" placeholder="Message Converra" autofocus></textarea>
+        <button id="send" type="submit" aria-label="Send" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
+      </form>
+      <div id="foot">Converra can make mistakes. Check important information.</div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const chatEl = $("chat"), welcome = $("welcome"), input = $("input"), sendBtn = $("send"), scrollEl = $("scroll");
+
+    const SUGGESTIONS = [
+      ["Explain a concept", "Explain how a load balancer works in simple words"],
+      ["Write code", "Write a Python function that checks if a string is a palindrome"],
+      ["Plan something", "Make a 3-day study plan to learn AWS basics"],
+      ["Give me ideas", "Suggest 5 DevOps project ideas for my portfolio"],
+    ];
+
+    function uid() { return (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random().toString(16).slice(2); }
+    function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+    let clientId = store("clientId") || uid(); store("clientId", clientId);
+    let sessionId = store("sessionId") || uid(); store("sessionId", sessionId);
+    let sending = false;
+
+    function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+    function inline(s) {
+      return esc(s)
+        .replace(/`([^`\n]+)`/g, '<code class="inline">$1</code>')
+        .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+    }
+
+    function render(text) {
+      const parts = text.split("```");
+      return parts.map((p, i) => {
+        if (i % 2 === 0) return inline(p);
+        const nl = p.indexOf("\n");
+        const lang = nl > -1 ? p.slice(0, nl).trim() : "";
+        const code = nl > -1 ? p.slice(nl + 1) : p;
+        return '<pre><div class="code-head"><span>' + esc(lang || "code") + '</span><button data-copy>Copy code</button></div><code>' + esc(code.replace(/\n$/, "")) + "</code></pre>";
+      }).join("");
+    }
+
+    function copy(text, btn, label) {
+      const done = () => { const old = btn.textContent; btn.textContent = "Copied!"; setTimeout(() => (btn.textContent = label || old), 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(() => {});
+    }
+
+    chatEl.addEventListener("click", (e) => {
+      const b = e.target;
+      if (b.matches("[data-copy]")) copy(b.closest("pre").querySelector("code").textContent, b, "Copy code");
+      if (b.matches("[data-copy-msg]")) copy(b.closest(".content").dataset.raw, b, "Copy");
+    });
+
+    function scrollDown() { scrollEl.scrollTop = scrollEl.scrollHeight; }
+
+    function setWelcome(show) { welcome.style.display = show ? "block" : "none"; }
+
+    function addUser(text) {
+      const row = document.createElement("div");
+      row.className = "row user";
+      const b = document.createElement("div");
+      b.className = "bubble"; b.textContent = text;
+      row.appendChild(b); chatEl.appendChild(row); scrollDown();
+    }
+
+    function addAssistant(text, opts) {
+      opts = opts || {};
+      const row = document.createElement("div");
+      row.className = "row assistant";
+      row.innerHTML = '<div class="avatar">C</div><div class="content"></div>';
+      const c = row.querySelector(".content");
+      if (opts.typing) c.innerHTML = '<span class="dots"><span></span><span></span><span></span></span>';
+      else fillAssistant(c, text, opts.error);
+      chatEl.appendChild(row); scrollDown();
+      return c;
+    }
+
+    function fillAssistant(c, text, isError) {
+      c.dataset.raw = text;
+      c.innerHTML = '<div class="' + (isError ? "error" : "") + '">' + render(text) + "</div>" +
+        (isError ? "" : '<div class="actions"><button data-copy-msg>Copy</button></div>');
+    }
+
+    async function api(path, opts) {
+      const res = await fetch(path, opts);
+      return res.json();
+    }
+
+    async function loadModels() {
+      const sel = $("modelSelect");
+      try {
+        const d = await api("/api/models");
+        sel.innerHTML = "";
+        d.models.forEach((m) => { const o = document.createElement("option"); o.value = m.id; o.textContent = m.label; sel.appendChild(o); });
+        const saved = store("model");
+        sel.value = d.models.some((m) => m.id === saved) ? saved : d.default;
+      } catch (e) { sel.innerHTML = "<option>Converra</option>"; }
+    }
+    $("modelSelect").addEventListener("change", (e) => store("model", e.target.value));
+
+    async function loadChats() {
+      const list = $("chatList");
+      try {
+        const rows = await api("/api/conversations?clientId=" + encodeURIComponent(clientId));
+        list.innerHTML = "";
+        if (!rows.length) { list.innerHTML = '<div class="empty-list">No chats yet</div>'; return; }
+        rows.forEach((r) => {
+          const item = document.createElement("div");
+          item.className = "chat-item" + (r.id === sessionId ? " active" : "");
+          const t = document.createElement("span"); t.textContent = r.title;
+          const del = document.createElement("button"); del.className = "del"; del.title = "Delete chat"; del.innerHTML = "&times;";
+          del.addEventListener("click", (e) => { e.stopPropagation(); removeChat(r.id); });
+          item.addEventListener("click", () => openChat(r.id));
+          item.append(t, del); list.appendChild(item);
+        });
+      } catch (e) { /* ignore */ }
+    }
+
+    async function openChat(id) {
+      sessionId = id; store("sessionId", id);
+      chatEl.innerHTML = "";
+      $("sidebar").classList.remove("open");
+      try {
+        const rows = await api("/api/history/" + id);
+        setWelcome(rows.length === 0);
+        rows.forEach((m) => (m.role === "user" ? addUser(m.content) : addAssistant(m.content)));
+      } catch (e) { setWelcome(true); }
+      loadChats(); scrollDown();
+    }
+
+    function newChat() {
+      sessionId = uid(); store("sessionId", sessionId);
+      chatEl.innerHTML = ""; setWelcome(true);
+      $("sidebar").classList.remove("open");
+      loadChats(); input.focus();
+    }
+
+    async function removeChat(id) {
+      await fetch("/api/conversations/" + id, { method: "DELETE" });
+      if (id === sessionId) newChat(); else loadChats();
+    }
+
+    async function send(text) {
+      if (sending || !text.trim()) return;
+      sending = true; sendBtn.disabled = true;
+      setWelcome(false);
+      addUser(text);
+      const c = addAssistant("", { typing: true });
+      try {
+        const d = await api("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, clientId, message: text, model: $("modelSelect").value }),
+        });
+        if (d.reply) fillAssistant(c, d.reply); else fillAssistant(c, "Error: " + (d.error || "unknown"), true);
+      } catch (e) { fillAssistant(c, "Error: could not reach the server", true); }
+      sending = false; sendBtn.disabled = !input.value.trim();
+      scrollDown(); loadChats(); input.focus();
+    }
+
+    $("composer").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const t = input.value; input.value = ""; resize(); send(t);
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("composer").requestSubmit(); }
+    });
+    function resize() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 200) + "px"; sendBtn.disabled = sending || !input.value.trim(); }
+    input.addEventListener("input", resize);
+
+    $("newChat").addEventListener("click", newChat);
+    $("menuBtn").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+
+    SUGGESTIONS.forEach(([title, prompt]) => {
+      const b = document.createElement("button");
+      b.className = "card"; b.type = "button";
+      b.innerHTML = "<b>" + esc(title) + "</b><small>" + esc(prompt) + "</small>";
+      b.addEventListener("click", () => send(prompt));
+      $("cards").appendChild(b);
+    });
+
+    loadModels();
+    openChat(sessionId);
+  </script>
+</body>
+</html>
