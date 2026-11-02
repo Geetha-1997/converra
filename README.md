@@ -1,4 +1,6 @@
 ﻿# Converra – AI Chat Application on AWS
+ <img width="958" height="479" alt="Screenshot 2026-11-02 153401" src="https://github.com/user-attachments/assets/abaf0a0e-11a7-4839-bd6b-237d929890dd" />
+
 
 Converra is a web-based AI chat application powered by the Groq API. It provides a ChatGPT-style interface, model selection, conversation history in the browser, and a Node.js backend.
 
