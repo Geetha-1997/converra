@@ -1,24 +1,9 @@
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: chatuser
-      POSTGRES_PASSWORD: chatpass
-      POSTGRES_DB: chatdb
-    volumes:
-      - dbdata:/var/lib/postgresql/data
-
   backend:
     build: ./backend
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY}
-      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
-      DB_HOST: db
-      DB_USER: chatuser
-      DB_PASSWORD: chatpass
-      DB_NAME: chatdb
-    depends_on:
-      - db
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
 
   frontend:
     build: ./frontend
@@ -26,6 +11,3 @@ services:
       - "8082:80"
     depends_on:
       - backend
-
-volumes:
-  dbdata:

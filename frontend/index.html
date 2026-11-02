@@ -210,33 +210,33 @@
     }
     $("modelSelect").addEventListener("change", (e) => store("model", e.target.value));
 
-    async function loadChats() {
+    let chats = {};
+    try { chats = JSON.parse(localStorage.getItem("converra_chats") || "{}"); } catch (e) { chats = {}; }
+    function saveChats() { try { localStorage.setItem("converra_chats", JSON.stringify(chats)); } catch (e) {} }
+
+    function loadChats() {
       const list = $("chatList");
-      try {
-        const rows = await api("/api/conversations?clientId=" + encodeURIComponent(clientId));
-        list.innerHTML = "";
-        if (!rows.length) { list.innerHTML = '<div class="empty-list">No chats yet</div>'; return; }
-        rows.forEach((r) => {
-          const item = document.createElement("div");
-          item.className = "chat-item" + (r.id === sessionId ? " active" : "");
-          const t = document.createElement("span"); t.textContent = r.title;
-          const del = document.createElement("button"); del.className = "del"; del.title = "Delete chat"; del.innerHTML = "&times;";
-          del.addEventListener("click", (e) => { e.stopPropagation(); removeChat(r.id); });
-          item.addEventListener("click", () => openChat(r.id));
-          item.append(t, del); list.appendChild(item);
-        });
-      } catch (e) { /* ignore */ }
+      list.innerHTML = "";
+      const rows = Object.entries(chats).sort((a, b) => b[1].updated - a[1].updated);
+      if (!rows.length) { list.innerHTML = '<div class="empty-list">No chats yet</div>'; return; }
+      rows.forEach(([id, c]) => {
+        const item = document.createElement("div");
+        item.className = "chat-item" + (id === sessionId ? " active" : "");
+        const t = document.createElement("span"); t.textContent = c.title;
+        const del = document.createElement("button"); del.className = "del"; del.title = "Delete chat"; del.innerHTML = "&times;";
+        del.addEventListener("click", (e) => { e.stopPropagation(); removeChat(id); });
+        item.addEventListener("click", () => openChat(id));
+        item.append(t, del); list.appendChild(item);
+      });
     }
 
-    async function openChat(id) {
+    function openChat(id) {
       sessionId = id; store("sessionId", id);
       chatEl.innerHTML = "";
       $("sidebar").classList.remove("open");
-      try {
-        const rows = await api("/api/history/" + id);
-        setWelcome(rows.length === 0);
-        rows.forEach((m) => (m.role === "user" ? addUser(m.content) : addAssistant(m.content)));
-      } catch (e) { setWelcome(true); }
+      const msgs = (chats[id] && chats[id].messages) || [];
+      setWelcome(msgs.length === 0);
+      msgs.forEach((m) => (m.role === "user" ? addUser(m.content) : addAssistant(m.content)));
       loadChats(); scrollDown();
     }
 
@@ -247,8 +247,8 @@
       loadChats(); input.focus();
     }
 
-    async function removeChat(id) {
-      await fetch("/api/conversations/" + id, { method: "DELETE" });
+    function removeChat(id) {
+      delete chats[id]; saveChats();
       if (id === sessionId) newChat(); else loadChats();
     }
 
@@ -256,16 +256,30 @@
       if (sending || !text.trim()) return;
       sending = true; sendBtn.disabled = true;
       setWelcome(false);
+      const chat = chats[sessionId] || (chats[sessionId] = {
+        title: text.replace(/\s+/g, " ").trim().slice(0, 40) || "New chat", messages: [], updated: Date.now(),
+      });
+      chat.messages.push({ role: "user", content: text });
+      chat.updated = Date.now(); saveChats();
       addUser(text);
       const c = addAssistant("", { typing: true });
       try {
         const d = await api("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, clientId, message: text, model: $("modelSelect").value }),
+          body: JSON.stringify({ messages: chat.messages.slice(-20), model: $("modelSelect").value }),
         });
-        if (d.reply) fillAssistant(c, d.reply); else fillAssistant(c, "Error: " + (d.error || "unknown"), true);
-      } catch (e) { fillAssistant(c, "Error: could not reach the server", true); }
+        if (d.reply) {
+          chat.messages.push({ role: "assistant", content: d.reply }); saveChats();
+          fillAssistant(c, d.reply);
+        } else {
+          chat.messages.pop(); saveChats();
+          fillAssistant(c, "Error: " + (d.error || "unknown"), true);
+        }
+      } catch (e) {
+        chat.messages.pop(); saveChats();
+        fillAssistant(c, "Error: could not reach the server", true);
+      }
       sending = false; sendBtn.disabled = !input.value.trim();
       scrollDown(); loadChats(); input.focus();
     }
