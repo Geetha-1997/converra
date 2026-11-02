@@ -1,0 +1,18 @@
+{
+  "commands": [
+    "echo '=== CLOUD INIT STATUS ==='",
+    "sudo cloud-init status --long || true",
+    "echo '=== APPLICATION DIRECTORY ==='",
+    "sudo ls -la /opt/groq-chat 2>&1 || true",
+    "echo '=== BACKEND FILES ==='",
+    "sudo ls -la /opt/groq-chat/backend 2>&1 || true",
+    "echo '=== FRONTEND FILES ==='",
+    "sudo ls -la /opt/groq-chat/frontend 2>&1 || true",
+    "echo '=== SERVICE STATUS ==='",
+    "sudo systemctl status groxchat nginx --no-pager 2>&1 || true",
+    "echo '=== PARAMETER STORE ACCESS TEST ==='",
+    "aws ssm get-parameter --name groq-chat --region ap-south-1 --with-decryption --query Parameter.Name --output text 2>&1",
+    "echo '=== CLOUD INIT ERROR LOG ==='",
+    "sudo tail -n 80 /var/log/cloud-init-output.log"
+  ]
+}

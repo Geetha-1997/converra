@@ -1,0 +1,13 @@
+[
+  {
+    "IpProtocol": "tcp",
+    "FromPort": 443,
+    "ToPort": 443,
+    "IpRanges": [
+      {
+        "CidrIp": "0.0.0.0/0",
+        "Description": "HTTPS for SSM, GitHub, package repositories and Groq API"
+      }
+    ]
+  }
+]

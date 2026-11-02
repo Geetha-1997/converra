@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Converra</title>
+  <title>Converra-AI</title>
   <style>
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
@@ -29,7 +29,8 @@
     #main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
     #topbar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
     #menuBtn { display: none; background: transparent; border: 0; color: #ececec; font-size: 22px; }
-    #modelSelect { background: transparent; color: #ececec; border: 0; font-size: 17px; font-weight: 600; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+    #brand { font-size: 20px; font-weight: 700; letter-spacing: .3px; }
+    #modelSelect { background: transparent; color: #9a9a9a; border: 0; font-size: 14px; font-weight: 500; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
     #modelSelect:hover { background: #2a2a2a; }
     #modelSelect option { background: #2f2f2f; color: #ececec; }
     #scroll { flex: 1; overflow-y: auto; }
@@ -86,19 +87,20 @@
     <button id="newChat">&#9998;&nbsp; New chat</button>
     <div class="side-label">Recent chats</div>
     <div id="chatList"></div>
-    <div id="profile"><div class="avatar">G</div><div>Guest<br><small style="color:#8e8e8e">Converra</small></div></div>
+    <div id="profile"><div class="avatar">G</div><div>Guest<br><small style="color:#8e8e8e">Converra-AI</small></div></div>
   </aside>
 
   <div id="main">
     <div id="topbar">
       <button id="menuBtn" aria-label="Menu">&#9776;</button>
+      <span id="brand">Converra-AI</span>
       <select id="modelSelect" aria-label="Model"></select>
     </div>
 
     <div id="scroll">
       <div id="welcome">
         <h1>What can I help with?</h1>
-        <p>Converra is powered by Groq for fast responses.</p>
+        <p>Converra-AI is powered by Groq for fast responses.</p>
         <div class="cards" id="cards"></div>
       </div>
       <div id="chat"></div>
@@ -106,12 +108,12 @@
 
     <div id="composerWrap">
       <form id="composer">
-        <textarea id="input" rows="1" placeholder="Message Converra" autofocus></textarea>
+        <textarea id="input" rows="1" placeholder="Message Converra-AI" autofocus></textarea>
         <button id="send" type="submit" aria-label="Send" disabled>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </form>
-      <div id="foot">Converra can make mistakes. Check important information.</div>
+      <div id="foot">Converra-AI can make mistakes. Check important information.</div>
     </div>
   </div>
 

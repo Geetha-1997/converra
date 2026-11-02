@@ -1,0 +1,14 @@
+{
+  "commands": [
+    "set -e",
+    "echo '=== REFRESH AMAZON LINUX REPOSITORIES ==='",
+    "sudo dnf makecache --refresh",
+    "echo '=== INSTALL NODE.JS, NGINX AND GIT ==='",
+    "sudo dnf install -y nodejs20 nginx git",
+    "echo '=== VERIFY INSTALLED VERSIONS ==='",
+    "node --version",
+    "npm --version",
+    "nginx -v",
+    "git --version"
+  ]
+}

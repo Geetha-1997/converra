@@ -18,7 +18,7 @@ get() { aws ssm get-parameter --region "$REGION" --name "$PARAM_PREFIX/$1" --wit
 cat > /etc/groqchat.env <<EOF
 PORT=3000
 GROQ_API_KEY=$(get GROQ_API_KEY)
-GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_MODEL=openai/gpt-oss-20b
 EOF
 chmod 600 /etc/groqchat.env
 

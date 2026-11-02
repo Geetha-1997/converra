@@ -1,0 +1,17 @@
+{
+  "commands": [
+    "echo '=== INSTANCE ==='",
+    "hostname",
+    "echo '=== APPLICATION DIRECTORY ==='",
+    "if [ -d /opt/groq-chat ]; then ls -la /opt/groq-chat; else echo 'Application directory does not exist'; fi",
+    "echo '=== NGINX CONFIGURATION FILES ==='",
+    "sudo ls -la /etc/nginx/conf.d/",
+    "echo '=== INSTALLED RUNTIMES ==='",
+    "node --version || true",
+    "npm --version || true",
+    "git --version || true",
+    "nginx -v 2>&1 || true",
+    "echo '=== PARAMETER ACCESS CHECK (NAME ONLY) ==='",
+    "aws ssm get-parameter --name groq-chat --region ap-south-1 --with-decryption --query Parameter.Name --output text"
+  ]
+}

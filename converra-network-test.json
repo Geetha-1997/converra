@@ -1,0 +1,18 @@
+{
+  "commands": [
+    "echo '=== INSTANCE DETAILS ==='",
+    "hostname",
+    "ip route",
+    "echo '=== DNS RESOLUTION ==='",
+    "getent ahostsv4 github.com",
+    "getent ahostsv4 al2023-repos-ap-south-1-de612dc2.s3.dualstack.ap-south-1.amazonaws.com",
+    "echo '=== GITHUB HTTPS TEST ==='",
+    "curl -4 -I -sS --connect-timeout 10 https://github.com",
+    "echo '=== AMAZON LINUX REPOSITORY HTTPS TEST ==='",
+    "curl -4 -I -sS --connect-timeout 10 https://al2023-repos-ap-south-1-de612dc2.s3.dualstack.ap-south-1.amazonaws.com",
+    "echo '=== GROQ PARAMETER ACCESS TEST ==='",
+    "aws ssm get-parameter --name groq-chat --region ap-south-1 --with-decryption --query Parameter.Name --output text",
+    "echo '=== PACKAGE MANAGER REPOSITORY CHECK ==='",
+    "sudo dnf repolist"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "commands": [
+    "set -e",
+    "sudo dnf makecache --refresh",
+    "sudo dnf install -y nodejs20 nginx git",
+    "node --version",
+    "npm --version",
+    "nginx -v",
+    "git --version"
+  ]
+}
