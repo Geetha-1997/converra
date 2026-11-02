@@ -1,56 +1,96 @@
 #!/bin/bash
-# EC2 Launch Template "User data" for the app tier (Amazon Linux 2023).
-# Edit REPO_URL / REGION if needed, then paste the whole script into the Launch Template.
+# Converra EC2 bootstrap - Amazon Linux 2023
+
+set -euo pipefail
+
 REPO_URL="https://github.com/Geetha-1997/converra.git"
 REGION="ap-south-1"
-PARAM_PREFIX="/groqchat"
+PARAM_NAME="groq-chat"
+APP_DIR="/opt/groq-chat"
 
-set -e
+# Install application dependencies
 dnf install -y nodejs20 nginx git
 
-# Fetch app code
-git clone "$REPO_URL" /opt/groq-chat
-cd /opt/groq-chat/backend
+# Verify AWS CLI is available
+command -v aws >/dev/null 2>&1 || {
+    echo "ERROR: AWS CLI is not installed."
+    exit 1
+}
+
+# Retrieve Groq API key from SSM Parameter Store
+GROQ_API_KEY="$(aws ssm get-parameter \
+    --region "$REGION" \
+    --name "$PARAM_NAME" \
+    --with-decryption \
+    --query 'Parameter.Value' \
+    --output text)"
+
+if [ -z "$GROQ_API_KEY" ] || [ "$GROQ_API_KEY" = "None" ]; then
+    echo "ERROR: Groq API key retrieval failed."
+    exit 1
+fi
+
+# Clone application
+git clone "$REPO_URL" "$APP_DIR"
+cd "$APP_DIR/backend"
+
 npm install --omit=dev
 
-# Read the Groq key from SSM Parameter Store and write an env file
-get() { aws ssm get-parameter --region "$REGION" --name "$PARAM_PREFIX/$1" --with-decryption --query Parameter.Value --output text; }
+# Create protected environment file
+umask 077
 cat > /etc/groqchat.env <<EOF
 PORT=3000
-GROQ_API_KEY=$(get GROQ_API_KEY)
+GROQ_API_KEY=$GROQ_API_KEY
 GROQ_MODEL=openai/gpt-oss-20b
 EOF
-chmod 600 /etc/groqchat.env
 
-# Backend as a systemd service
-cat > /etc/systemd/system/groqchat.service <<EOF
+chmod 600 /etc/groqchat.env
+unset GROQ_API_KEY
+
+# Configure backend systemd service
+cat > /etc/systemd/system/groqchat.service <<'EOF'
 [Unit]
 Description=Converra backend
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 EnvironmentFile=/etc/groqchat.env
 WorkingDirectory=/opt/groq-chat/backend
 ExecStart=/usr/bin/node server.js
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Nginx serves the frontend and proxies /api to the backend
+# Configure Nginx
 cat > /etc/nginx/conf.d/groqchat.conf <<'EOF'
 server {
     listen 80 default_server;
     root /opt/groq-chat/frontend;
     index index.html;
-    location /api/ { proxy_pass http://127.0.0.1:3000; proxy_read_timeout 90s; }
-    location /health { proxy_pass http://127.0.0.1:3000; }
-    location / { try_files $uri /index.html; }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_read_timeout 90s;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:3000;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
 }
 EOF
-# "default_server" above makes our block win over nginx's built-in one
-chmod -R o+rX /opt/groq-chat
 
+chmod -R o+rX "$APP_DIR"
+
+nginx -t
 systemctl daemon-reload
 systemctl enable --now groqchat nginx
+
+echo "Converra bootstrap completed successfully."
