@@ -3,13 +3,10 @@ const cors = require("cors");
 
 const PORT = process.env.PORT || 3000;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const DEFAULT_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const DEFAULT_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 
 // Models shown in the dropdown. Check https://console.groq.com/docs/models for changes.
 const MODELS = [
-  { id: "llama-3.3-70b-versatile", label: "Llama 3.3 70B" },
-  { id: "llama-3.1-8b-instant", label: "Llama 3.1 8B (fast)" },
-  { id: "openai/gpt-oss-120b", label: "GPT-OSS 120B" },
   { id: "openai/gpt-oss-20b", label: "GPT-OSS 20B" },
 ];
 
